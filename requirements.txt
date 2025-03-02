@@ -1,0 +1,12 @@
+torch
+torchvision
+torchaudio
+transformers
+datasets
+peft
+accelerate
+scipy
+numpy
+pandas
+scikit-learn
+tqdm
