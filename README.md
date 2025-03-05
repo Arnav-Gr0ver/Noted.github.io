@@ -1,69 +1,67 @@
-# Noted: AI-Powered Visual Note Extraction
+# WhiteboardAI: Transforming Sketches into Insights
 
-![Project Logo](logo-placeholder.png)
+## Vision
 
-## Overview
+WhiteboardAI is an advanced AI-powered platform that transforms unstructured whiteboard sketches into clear, actionable insights. By leveraging state-of-the-art Vision Transformers and Stable Diffusion models, we turn raw visual notes into structured, meaningful content.
 
-Noted is an advanced AI-powered application that transforms visual content into structured, actionable insights. By leveraging cutting-edge machine learning models, Noted extracts meaningful information from images, making note-taking and information processing seamless.
+## Key Features
 
-## Features
-
-- 📸 Drag-and-drop image upload
-- 🤖 AI-powered object detection
-- 📋 Contextual image understanding
-- 📝 Plain text export
-- 🚀 Minimal, clean user interface
+- 🖼️ Whiteboard Sketch Upload
+- 📝 Intelligent Text Extraction
+- 📊 Automated Data Visualization
+- 🤖 AI-Powered Transformation
 
 ## Technology Stack
 
-- Vanilla JavaScript
+- Vision Transformer (ViT) for Text Extraction
+- Stable Diffusion for Visualization
 - Hugging Face Inference API
-- Facebook DETR Object Detection Model
 
-## Roadmap & Future Features
+## Roadmap
 
-### Immediate Roadmap (Next 3 Months)
-- [ ] Enhanced OCR capabilities
-- [ ] Multi-image upload support
-- [ ] Markdown export functionality
-- [ ] More sophisticated object detection models
+### Immediate Roadmap (3-6 Months)
+- [ ] Enhance text extraction accuracy
+- [ ] Improve visualization generation
+- [ ] Add support for multiple image formats
+- [ ] Implement advanced prompt engineering
 
-### Mid-Term Features (6-9 Months)
-- [ ] Machine learning model fine-tuning
-- [ ] Advanced image classification
-- [ ] PDF/Document export options
-- [ ] Cloud sync and storage integration
+### Mid-Term Features (6-12 Months)
+- [ ] Multi-language support
+- [ ] Custom model fine-tuning
+- [ ] Advanced chart and graph generation
+- [ ] Collaborative note-sharing platform
 
-### Long-Term Vision (12+ Months)
-- [ ] Real-time collaborative note-taking
+### Long-Term Vision (12-24 Months)
+- [ ] Real-time collaborative whiteboard transformation
+- [ ] Enterprise integration
+- [ ] Advanced machine learning model development
 - [ ] Cross-platform mobile application
-- [ ] Advanced data visualization
-- [ ] Custom machine learning model training
 
 ## Getting Started
 
 ### Prerequisites
 - Modern web browser
-- Internet connection for AI model inference
+- Hugging Face API Key
+- Stable internet connection
 
 ### Installation
 1. Clone the repository
-2. Open `index.html` in your browser
-3. Start uploading images!
+2. Add your Hugging Face API key
+3. Open `index.html`
+4. Start transforming whiteboards!
 
-## Contribution
+## Ethical AI Commitment
 
-We welcome contributions! Please see `CONTRIBUTING.md` for details on our code of conduct and process for submitting pull requests.
+We are committed to responsible AI development, ensuring our technology enhances human creativity while maintaining privacy and ethical standards.
+
+## Contributing
+
+Contributions are welcome! Please read our contribution guidelines for details.
 
 ## License
 
-This project is licensed under the MIT License - see the `LICENSE.md` file for details.
-
-## Acknowledgements
-
-- Hugging Face for providing open-source AI models
-- Facebook Research for the DETR object detection model
+MIT License
 
 ---
 
-**Made with ❤️ by the Noted Team**
+**Powered by AI, Designed for Humans**
