@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noted.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest/dist/transformers.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-white text-black min-h-screen flex flex-col">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl font-bold mb-4">Noted.</h1>
+            <div class="bg-gray-100 p-4 rounded-lg mb-6">
+                <p class="text-sm">
+                    Noted. uses advanced AI to extract text, analyze graphics, and transform images 
+                    into structured, readable content. Powered by Hugging Face visual transformers 
+                    and Stable Diffusion for intelligent image processing.
+                </p>
+            </div>
+        </header>
+
+        <main>
+            <section id="upload-section" class="border border-gray-200 rounded-lg p-8 mb-8">
+                <div 
+                    id="dropzone" 
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer hover:border-gray-500 transition group"
+                >
+                    <input 
+                        type="file" 
+                        id="imageUpload" 
+                        accept="image/*" 
+                        class="hidden"
+                    >
+                    <label for="imageUpload" class="cursor-pointer">
+                        <svg class="mx-auto h-16 w-16 text-gray-400 group-hover:text-gray-600 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="mt-4 text-xl text-gray-600 group-hover:text-gray-800 transition">
+                            Upload Image for AI Analysis
+                        </p>
+                    </label>
+                </div>
+            </section>
+
+            <section id="processing-section" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-gray-100 border border-gray-200 rounded-lg p-6">
+                        <h2 class="text-2xl font-bold mb-4">Original Image</h2>
+                        <div id="original-image-container" class="rounded-lg overflow-hidden mb-4"></div>
+                    </div>
+                    <div class="bg-gray-100 border border-gray-200 rounded-lg p-6">
+                        <h2 class="text-2xl font-bold mb-4">AI Analysis</h2>
+                        <div id="ai-results" class="space-y-4">
+                            <div>
+                                <h3 class="font-semibold">Extracted Text</h3>
+                                <pre id="extracted-text" class="text-sm overflow-auto max-h-[200px] bg-white p-2 rounded"></pre>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Image Understanding</h3>
+                                <pre id="image-description" class="text-sm overflow-auto max-h-[200px] bg-white p-2 rounded"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-center space-x-4">
+                    <button id="markdownBtn" class="border border-black px-6 py-3 hover:bg-black hover:text-white transition">
+                        Convert to Markdown
+                    </button>
+                    <button id="jsonBtn" class="border border-black px-6 py-3 hover:bg-black hover:text-white transition">
+                        Convert to JSON
+                    </button>
+                    <button id="visualizeBtn" class="border border-black px-6 py-3 hover:bg-black hover:text-white transition">
+                        Visualize Graphics
+                    </button>
+                </div>
+
+                <section id="visualization-section" class="mt-8 hidden">
+                    <h2 class="text-2xl font-bold mb-4">AI Visualizations</h2>
+                    <div id="visualization-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- AI-generated visualizations will be inserted here -->
+                    </div>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Hugging Face Transformers and AI Processing
+        const dropzone = document.getElementById('dropzone');
+        const imageUpload = document.getElementById('imageUpload');
+        const processingSection = document.getElementById('processing-section');
+        const originalImageContainer = document.getElementById('original-image-container');
+        const extractedTextPre = document.getElementById('extracted-text');
+        const imageDescriptionPre = document.getElementById('image-description');
+        const markdownBtn = document.getElementById('markdownBtn');
+        const jsonBtn = document.getElementById('jsonBtn');
+        const visualizeBtn = document.getElementById('visualizeBtn');
+        const visualizationSection = document.getElementById('visualization-section');
+        const visualizationContainer = document.getElementById('visualization-container');
+
+        // Mock AI Processing Functions (would be replaced with actual Hugging Face API calls)
+        async function processImage(imageFile) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    // Simulate AI processing
+                    const extractedText = await simulateTextExtraction(e.target.result);
+                    const imageDescription = await simulateImageUnderstanding(e.target.result);
+                    
+                    resolve({
+                        originalImage: e.target.result,
+                        extractedText: extractedText,
+                        imageDescription: imageDescription
+                    });
+                };
+                reader.readAsDataURL(imageFile);
+            });
+        }
+
+        async function simulateTextExtraction(imageDataUrl) {
+            // Placeholder for Hugging Face OCR transformer
+            return "Text extraction would occur here using advanced visual language models.\n\nActual implementation requires Hugging Face Transformers API integration.";
+        }
+
+        async function simulateImageUnderstanding(imageDataUrl) {
+            // Placeholder for visual understanding transformer
+            return "Image analysis would provide a detailed description of the image contents, objects, context, and potential insights.\n\nRequires integration with Hugging Face visual transformers.";
+        }
+
+        async function generateVisualizations(imageFile) {
+            // Placeholder for Stable Diffusion visualization
+            const placeholderVisualizations = [
+                { type: 'Chart', description: 'Bar chart representation of image data' },
+                { type: 'Diagram', description: 'Structured diagram of key image elements' }
+            ];
+
+            visualizationContainer.innerHTML = placeholderVisualizations.map(viz => `
+                <div class="bg-gray-100 border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold">${viz.type}</h3>
+                    <p class="text-sm">${viz.description}</p>
+                    <div class="h-48 bg-white flex items-center justify-center">
+                        Visualization Placeholder
+                    </div>
+                </div>
+            `).join('');
+
+            visualizationSection.classList.remove('hidden');
+        }
+
+        function handleImageUpload(file) {
+            if (!file.type.startsWith('image/')) return;
+
+            processImage(file).then(result => {
+                // Show original image
+                originalImageContainer.innerHTML = `
+                    <img src="${result.originalImage}" class="w-full h-auto object-cover rounded-lg">
+                `;
+
+                // Update text extraction and image understanding
+                extractedTextPre.textContent = result.extractedText;
+                imageDescriptionPre.textContent = result.imageDescription;
+
+                // Show processing section
+                processingSection.classList.remove('hidden');
+            });
+        }
+
+        // Drag and drop listeners
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        dropzone.addEventListener('drop', handleDrop, false);
+        imageUpload.addEventListener('change', (e) => handleImageUpload(e.target.files[0]), false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleImageUpload(files[0]);
+        }
+
+        // Conversion buttons
+        markdownBtn.addEventListener('click', () => {
+            alert('Convert to Markdown functionality to be implemented with Hugging Face transformers');
+        });
+
+        jsonBtn.addEventListener('click', () => {
+            alert('Convert to JSON functionality to be implemented with Hugging Face transformers');
+        });
+
+        visualizeBtn.addEventListener('click', () => {
+            const uploadedImage = imageUpload.files[0];
+            if (uploadedImage) {
+                generateVisualizations(uploadedImage);
+            } else {
+                alert('Please upload an image first');
+            }
+        });
+    </script>
+</body>
+</html>
