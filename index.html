@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Noted</title>
+  <title>Noted - Drawing to Graphics</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
   <style>
     /* Global Styles */
@@ -17,8 +17,9 @@
       align-items: center;
     }
     h1 {
-      font-size: 3em;
+      font-size: 2.8em;
       margin-bottom: 10px;
+      text-align: center;
     }
     p.instructions {
       max-width: 600px;
@@ -46,24 +47,29 @@
     button:hover, .upload-label:hover {
       background-color: #333;
     }
-    #video, #canvas {
+    #video, #canvas, #outputImage {
       border: 2px solid #000;
       border-radius: 4px;
       margin: 10px;
+      max-width: 320px;
+      max-height: 240px;
     }
     #canvas {
+      display: none;
+    }
+    #outputImage {
       display: none;
     }
     #notes {
       width: 80%;
       max-width: 600px;
-      height: 200px;
-      border: 2px solid #000;
       margin-top: 20px;
       padding: 10px;
-      overflow-y: auto;
-      white-space: pre-wrap;
       background: #f9f9f9;
+      border: 2px solid #000;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      text-align: center;
     }
     /* Hide file input but keep it accessible */
     #upload {
@@ -74,35 +80,39 @@
 <body>
   <h1>Noted</h1>
   <p class="instructions">
-    Choose an option below to either capture a photo using your webcam or upload an image from your device. Then click "Process Photo" to generate structured notes.
+    Capture or upload your drawing, then click “Transform Drawing” to generate charts, plots, tables, or graphics via Stable Diffusion.
   </p>
   
   <!-- Webcam Video -->
   <video id="video" width="320" height="240" autoplay></video>
   
-  <!-- Canvas for previewing captured/uploaded image -->
+  <!-- Canvas for previewing captured/uploaded drawing -->
   <canvas id="canvas" width="320" height="240"></canvas>
   
-  <!-- Buttons for capturing/uploading image -->
+  <!-- Output image element for the generated graphic -->
+  <img id="outputImage" alt="Generated Graphic" width="320" height="240">
+  
+  <!-- Buttons for capturing/uploading drawing -->
   <div class="button-group">
     <button id="snap">Take Photo</button>
-    <label for="upload" class="upload-label">Upload Image</label>
+    <label for="upload" class="upload-label">Upload Drawing</label>
     <input type="file" id="upload" accept="image/*">
   </div>
   
-  <!-- Process Button -->
-  <button id="process">Process Photo</button>
+  <!-- Transform Button -->
+  <button id="transform">Transform Drawing</button>
   
-  <!-- Area to display the structured notes -->
-  <div id="notes">Structured notes will appear here...</div>
+  <!-- Output area for text status or errors -->
+  <div id="notes">Generated graphic will appear here...</div>
   
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const snap = document.getElementById('snap');
-    const processBtn = document.getElementById('process');
+    const transformBtn = document.getElementById('transform');
     const uploadInput = document.getElementById('upload');
     const notesDiv = document.getElementById('notes');
+    const outputImage = document.getElementById('outputImage');
     const ctx = canvas.getContext('2d');
 
     // Setup webcam video stream
@@ -120,13 +130,14 @@
       notesDiv.textContent = "getUserMedia is not supported in your browser.";
     }
     
-    // Capture image from webcam and draw it to the canvas
+    // Capture drawing from webcam and draw it to the canvas
     snap.addEventListener('click', () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       canvas.style.display = 'block';
+      outputImage.style.display = 'none';
     });
     
-    // Handle image upload; draw the uploaded image onto the canvas
+    // Handle drawing upload; draw the uploaded image onto the canvas
     uploadInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -137,6 +148,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             canvas.style.display = 'block';
+            outputImage.style.display = 'none';
           }
           img.src = event.target.result;
         }
@@ -144,33 +156,49 @@
       }
     });
     
-    // Process the image in the canvas by sending it to the Hugging Face model
-    processBtn.addEventListener('click', () => {
-      canvas.toBlob(blob => {
-        // Send the image as raw binary data
-        fetch('https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/octet-stream'
-          },
-          body: blob
-        })
-        .then(response => {
-          if (!response.ok) {
-            return response.text().then(text => { throw new Error(text) });
-          }
-          return response.json();
-        })
-        .then(data => {
-          // Display the returned JSON structured notes.
-          // The model returns a caption as a string.
-          notesDiv.textContent = JSON.stringify(data, null, 2);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          notesDiv.textContent = 'An error occurred while processing the image: ' + error.message;
-        });
-      }, 'image/png');
+    // Transform the drawing using Stable Diffusion img2img
+    transformBtn.addEventListener('click', () => {
+      // Convert the canvas drawing to a data URL (base64 encoded PNG)
+      const dataUrl = canvas.toDataURL('image/png');
+      
+      // Prepare the payload for the img2img API call.
+      // Some endpoints may expect the full data URL while others only need the base64 string.
+      const payload = {
+        prompt: "Transform this drawing into a clear, structured chart, plot, table, or graphic",
+        init_image: dataUrl,
+        strength: 0.7,
+        num_inference_steps: 50
+      };
+      
+      notesDiv.textContent = "Processing drawing...";
+      
+      // Change the model endpoint as needed. Here we use a Stable Diffusion endpoint.
+      fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+          // If required, add: 'Authorization': 'Bearer YOUR_TOKEN'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => { throw new Error(text) });
+        }
+        // The endpoint returns an image (binary blob)
+        return response.blob();
+      })
+      .then(blob => {
+        // Create an object URL for the generated image and display it
+        const imageUrl = URL.createObjectURL(blob);
+        outputImage.src = imageUrl;
+        outputImage.style.display = 'block';
+        notesDiv.textContent = "Transformation complete.";
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        notesDiv.textContent = 'An error occurred: ' + error.message;
+      });
     });
   </script>
 </body>
