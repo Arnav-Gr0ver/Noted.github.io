@@ -1,113 +1,103 @@
-// Hugging Face Model Configurations
-const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models';
-
-// Vision Transformer for Text Extraction
-const VIT_OCR_MODEL = 'google/vit-base-patch16-224';
-
-// Stable Diffusion for Visualization
-const STABLE_DIFFUSION_MODEL = 'stabilityai/stable-diffusion-2-1';
-
-// Key Models for Transformation
-const MODELS = {
-    textExtraction: 'google/vit-base-patch16-224',
-    drawingToChart: 'stabilityai/stable-diffusion-2-1'
-};
-
 class NoteTransformer {
     constructor() {
-        this.apiKey = null; // You'll need to add Hugging Face API key
+        // Public, ungated models
+        this.MODELS = {
+            textExtraction: 'microsoft/trocr-base-handwritten',
+            objectDetection: 'facebook/detr-resnet-50',
+            imageClassification: 'google/vit-base-patch16-224'
+        };
     }
 
     async queryHuggingFace(model, data) {
-        if (!this.apiKey) {
-            throw new Error('Hugging Face API key is required');
+        try {
+            const response = await fetch(`https://huggingface.co/api/models/${model}/inference`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Model Inference Error:', error);
+            throw error;
         }
-
-        const response = await fetch(`${HUGGINGFACE_API_URL}/${model}`, {
-            headers: { 
-                "Authorization": `Bearer ${this.apiKey}`,
-                "Content-Type": "application/json" 
-            },
-            method: "POST",
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
     }
 
     async extractTextFromImage(imageFile) {
         try {
             const base64Image = await this.getBase64(imageFile);
+            
             const result = await this.queryHuggingFace(
-                MODELS.textExtraction, 
+                this.MODELS.textExtraction, 
                 { image: base64Image }
             );
 
             return result.text || 'No text could be extracted.';
         } catch (error) {
             console.error('Text extraction error:', error);
-            return 'Error extracting text.';
+            return `Error extracting text: ${error.message}`;
         }
     }
 
-    async transformDrawingToVisualization(imageFile, textContext) {
+    async analyzeImageObjects(imageFile) {
         try {
-            // Generate a prompt for Stable Diffusion based on extracted text
-            const visualizationPrompt = this.generateVisualizationPrompt(textContext);
-            
             const base64Image = await this.getBase64(imageFile);
-            const result = await this.queryHuggingFace(
-                MODELS.drawingToChart, 
-                { 
-                    inputs: visualizationPrompt,
-                    image: base64Image 
-                }
+            
+            const results = await this.queryHuggingFace(
+                this.MODELS.objectDetection, 
+                { image: base64Image }
             );
 
-            return result.generated_image || null;
+            // Process detection results
+            if (Array.isArray(results)) {
+                return results.map(item => 
+                    `${item.label} (${(item.score * 100).toFixed(2)}% confidence)`
+                ).join('\n');
+            }
+
+            return 'No objects detected.';
         } catch (error) {
-            console.error('Visualization transformation error:', error);
-            return null;
+            console.error('Image analysis error:', error);
+            return `Error analyzing image: ${error.message}`;
         }
-    }
-
-    generateVisualizationPrompt(text) {
-        // Intelligent prompt generation for Stable Diffusion
-        const possiblePrompts = [
-            `Create a professional data visualization chart representing: ${text}`,
-            `Transform the context of: ${text} into an elegant infographic`,
-            `Generate a clean, minimalist chart visualizing the key points: ${text}`
-        ];
-
-        // Randomly select a prompt style
-        return possiblePrompts[Math.floor(Math.random() * possiblePrompts.length)];
     }
 
     async getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onload = () => {
+                // Ensure we strip the data URL prefix
+                const base64 = reader.result.split(',')[1];
+                
+                if (!base64) {
+                    reject(new Error('Failed to convert image to base64'));
+                }
+                
+                resolve(base64);
+            };
             reader.onerror = error => reject(error);
         });
     }
 
     async processWhiteboardImage(imageFile) {
         try {
-            // Extract text first
-            const extractedText = await this.extractTextFromImage(imageFile);
-            
-            // Transform drawing to visualization
-            const visualizedImage = await this.transformDrawingToVisualization(imageFile, extractedText);
+            // Parallel processing of text and object detection
+            const [extractedText, imageDescription] = await Promise.all([
+                this.extractTextFromImage(imageFile),
+                this.analyzeImageObjects(imageFile)
+            ]);
 
             return {
                 originalImage: URL.createObjectURL(imageFile),
                 extractedText,
-                visualizedImage
+                imageDescription
             };
         } catch (error) {
             console.error('Whiteboard image processing error:', error);
@@ -136,13 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img src="${result.originalImage}" alt="Original Whiteboard">
                     </div>
                     <div class="note-content">
-                        <h3>Extracted Text</h3>
-                        <pre>${result.extractedText}</pre>
-                        
-                        ${result.visualizedImage ? `
-                        <h3>Visualization</h3>
-                        <img src="${result.visualizedImage}" alt="Generated Visualization" class="visualization-image">
-                        ` : ''}
+                        <h3>Extracted Information</h3>
+                        <div class="info-section">
+                            <h4>Text Extraction</h4>
+                            <pre>${result.extractedText}</pre>
+                            
+                            <h4>Image Understanding</h4>
+                            <pre>${result.imageDescription}</pre>
+                        </div>
                     </div>
                 `;
 
