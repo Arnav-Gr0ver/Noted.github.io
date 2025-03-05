@@ -148,7 +148,7 @@
     processBtn.addEventListener('click', () => {
       canvas.toBlob(blob => {
         // Send the image as raw binary data
-        fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
+        fetch('https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/octet-stream'
@@ -163,7 +163,7 @@
         })
         .then(data => {
           // Display the returned JSON structured notes.
-          // For example, the BLIP model might return an array of captions.
+          // The model returns a caption as a string.
           notesDiv.textContent = JSON.stringify(data, null, 2);
         })
         .catch(error => {
