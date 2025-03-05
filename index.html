@@ -164,7 +164,7 @@
         })
         .catch(error => {
           console.error('Error:', error);
-          notesDiv.textContent = 'An error occurred while processing the image.';
+          notesDiv.textContent = 'An error occurred while processing the image.' + error;
         });
       }, 'image/png');
     });
