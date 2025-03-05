@@ -6,11 +6,14 @@ class NoteTransformer {
             objectDetection: 'facebook/detr-resnet-50',
             imageClassification: 'google/vit-base-patch16-224'
         };
+        
+        // Hugging Face Inference API base URL
+        this.INFERENCE_API_URL = 'https://api-inference.huggingface.co/models';
     }
 
     async queryHuggingFace(model, data) {
         try {
-            const response = await fetch(`https://huggingface.co/api/models/${model}/inference`, {
+            const response = await fetch(`${this.INFERENCE_API_URL}/${model}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -19,7 +22,10 @@ class NoteTransformer {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Try to get more detailed error information
+                const errorText = await response.text();
+                console.error('Detailed Error Response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
             }
 
             return await response.json();
@@ -33,12 +39,20 @@ class NoteTransformer {
         try {
             const base64Image = await this.getBase64(imageFile);
             
+            console.log('Attempting text extraction with model:', this.MODELS.textExtraction);
+            
             const result = await this.queryHuggingFace(
                 this.MODELS.textExtraction, 
                 { image: base64Image }
             );
 
-            return result.text || 'No text could be extracted.';
+            console.log('Text Extraction Result:', result);
+
+            // Different models might return text differently
+            return result.generated_text || 
+                   result.text || 
+                   result.toString() || 
+                   'No text could be extracted.';
         } catch (error) {
             console.error('Text extraction error:', error);
             return `Error extracting text: ${error.message}`;
@@ -49,10 +63,14 @@ class NoteTransformer {
         try {
             const base64Image = await this.getBase64(imageFile);
             
+            console.log('Attempting object detection with model:', this.MODELS.objectDetection);
+            
             const results = await this.queryHuggingFace(
                 this.MODELS.objectDetection, 
                 { image: base64Image }
             );
+
+            console.log('Object Detection Results:', results);
 
             // Process detection results
             if (Array.isArray(results)) {
