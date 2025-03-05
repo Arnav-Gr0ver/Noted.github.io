@@ -75,31 +75,33 @@ header h1 {
     margin-bottom: 1rem;
 }
 
-.image-analysis-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.notes-container {
+    display: flex;
+    flex-direction: column;
     gap: 2rem;
     margin-top: 2rem;
 }
 
-.original-image-container, 
-.ai-analysis-container {
+.note-entry {
     background-color: white;
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
 
-#original-image-wrapper img {
-    max-width: 100%;
+.uploaded-image {
+    max-width: 300px;
     border-radius: 8px;
 }
 
-#ai-results div {
-    margin-bottom: 1rem;
+.image-analysis {
+    flex-grow: 1;
 }
 
-#ai-results pre {
+.image-analysis pre {
     background-color: #f4f4f4;
     padding: 1rem;
     border-radius: 8px;
@@ -133,22 +135,12 @@ button:hover {
     display: none;
 }
 
-#visualization-section {
-    margin-top: 2rem;
-}
-
-#visualization-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
 @media (max-width: 768px) {
-    .image-analysis-container {
-        grid-template-columns: 1fr;
+    .note-entry {
+        flex-direction: column;
     }
 
-    .action-buttons {
-        flex-direction: column;
+    .uploaded-image {
+        max-width: 100%;
     }
 }

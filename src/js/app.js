@@ -2,20 +2,11 @@
 const dropzone = document.getElementById('dropzone');
 const imageUpload = document.getElementById('imageUpload');
 const processingSection = document.getElementById('processing-section');
-const originalImageWrapper = document.getElementById('original-image-wrapper');
-const extractedTextPre = document.getElementById('extracted-text');
-const imageDescriptionPre = document.getElementById('image-description');
-const markdownBtn = document.getElementById('markdownBtn');
-const jsonBtn = document.getElementById('jsonBtn');
-const visualizeBtn = document.getElementById('visualizeBtn');
-const visualizationSection = document.getElementById('visualization-section');
-const visualizationContainer = document.getElementById('visualization-container');
+const notesContainer = document.getElementById('notes-container');
+const plainTextBtn = document.getElementById('plainTextBtn');
 
 // Hugging Face Inference API Endpoints
 const INFERENCE_API_URL = 'https://api-inference.huggingface.co/models';
-
-// Image to Text Model (Public)
-const OCR_MODEL = 'microsoft/trocr-base-handwritten';
 
 // Object Detection Model (Public)
 const OBJECT_DETECTION_MODEL = 'facebook/detr-resnet-50';
@@ -47,21 +38,6 @@ function getBase64(file) {
     });
 }
 
-// Extract text from image
-async function extractTextFromImage(imageFile) {
-    try {
-        const base64Image = await getBase64(imageFile);
-        const result = await queryHuggingFaceAPI(OCR_MODEL, { 
-            image: base64Image 
-        });
-
-        return result.generated_text || 'No text could be extracted.';
-    } catch (error) {
-        console.error('Text extraction error:', error);
-        return 'Error extracting text.';
-    }
-}
-
 // Analyze image objects
 async function analyzeImageObjects(imageFile) {
     try {
@@ -86,25 +62,17 @@ async function analyzeImageObjects(imageFile) {
     }
 }
 
-// Process image with both text extraction and object detection
+// Process image with object detection
 async function processImage(imageFile) {
-    // Show loading state
-    extractedTextPre.textContent = 'Extracting text...';
-    imageDescriptionPre.textContent = 'Analyzing image...';
-
     try {
         const reader = new FileReader();
         return new Promise((resolve, reject) => {
             reader.onload = async function(e) {
                 try {
-                    const [extractedText, imageDescription] = await Promise.all([
-                        extractTextFromImage(imageFile),
-                        analyzeImageObjects(imageFile)
-                    ]);
+                    const imageDescription = await analyzeImageObjects(imageFile);
 
                     resolve({
                         originalImage: e.target.result,
-                        extractedText: extractedText,
                         imageDescription: imageDescription
                     });
                 } catch (error) {
@@ -115,8 +83,7 @@ async function processImage(imageFile) {
         });
     } catch (error) {
         console.error('Image processing error:', error);
-        extractedTextPre.textContent = 'Error processing image.';
-        imageDescriptionPre.textContent = 'Error processing image.';
+        alert('Error processing image.');
     }
 }
 
@@ -124,14 +91,19 @@ function handleImageUpload(file) {
     if (!file.type.startsWith('image/')) return;
 
     processImage(file).then(result => {
-        // Show original image
-        originalImageWrapper.innerHTML = `
-            <img src="${result.originalImage}" alt="Uploaded image">
+        // Create a note entry with image and analysis
+        const noteEntry = document.createElement('div');
+        noteEntry.classList.add('note-entry');
+        noteEntry.innerHTML = `
+            <img src="${result.originalImage}" alt="Uploaded image" class="uploaded-image">
+            <div class="image-analysis">
+                <h3>Image Understanding</h3>
+                <pre>${result.imageDescription}</pre>
+            </div>
         `;
 
-        // Update text extraction and image understanding
-        extractedTextPre.textContent = result.extractedText;
-        imageDescriptionPre.textContent = result.imageDescription;
+        // Add to notes container
+        notesContainer.appendChild(noteEntry);
 
         // Show processing section
         processingSection.classList.remove('hidden');
@@ -160,39 +132,18 @@ function handleDrop(e) {
     handleImageUpload(files[0]);
 }
 
-// Conversion and visualization buttons
-markdownBtn.addEventListener('click', () => {
-    const extractedText = extractedTextPre.textContent;
-    const markdownText = `## Extracted Text\n\n${extractedText}`;
+// Plain Text Export
+plainTextBtn.addEventListener('click', () => {
+    let plainText = '';
+    const noteEntries = document.querySelectorAll('.note-entry');
+    
+    noteEntries.forEach((entry, index) => {
+        const imageAnalysis = entry.querySelector('.image-analysis pre').textContent;
+        plainText += `Note ${index + 1}:\n${imageAnalysis}\n\n`;
+    });
     
     // Fallback for browsers that don't support clipboard API
-    fallbackCopyTextToClipboard(markdownText);
-});
-
-jsonBtn.addEventListener('click', () => {
-    const extractedText = extractedTextPre.textContent;
-    const jsonText = JSON.stringify({
-        extractedText: extractedText,
-        timestamp: new Date().toISOString()
-    }, null, 2);
-    
-    // Fallback for browsers that don't support clipboard API
-    fallbackCopyTextToClipboard(jsonText);
-});
-
-visualizeBtn.addEventListener('click', () => {
-    const uploadedImage = imageUpload.files[0];
-    if (uploadedImage) {
-        visualizationContainer.innerHTML = `
-            <div class="visualization-placeholder">
-                <h3>Visual Analysis Placeholder</h3>
-                <p>Advanced visualization features coming soon!</p>
-            </div>
-        `;
-        visualizationSection.classList.remove('hidden');
-    } else {
-        alert('Please upload an image first');
-    }
+    fallbackCopyTextToClipboard(plainText);
 });
 
 // Fallback clipboard function for broader browser support
