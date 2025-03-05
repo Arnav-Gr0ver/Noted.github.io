@@ -11,41 +11,113 @@ const visualizeBtn = document.getElementById('visualizeBtn');
 const visualizationSection = document.getElementById('visualization-section');
 const visualizationContainer = document.getElementById('visualization-container');
 
-// Hugging Face API Configuration
-const HUGGINGFACE_API_KEY = 'YOUR_HUGGING_FACE_API_KEY'; // Replace with your actual API key
+// Hugging Face Inference API Endpoints
+const INFERENCE_API_URL = 'https://api-inference.huggingface.co/models';
 
-// Simulated AI Processing (replace with actual API calls)
-async function simulateTextExtraction(imageFile) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve('Simulated text extraction:\n\nThis is a sample of extracted text from the image.\nAn actual implementation would use Hugging Face OCR models.');
-        }, 1000);
+// Image to Text Model (Public)
+const OCR_MODEL = 'microsoft/trocr-base-handwritten';
+
+// Object Detection Model (Public)
+const OBJECT_DETECTION_MODEL = 'facebook/detr-resnet-50';
+
+// Query Hugging Face Inference API
+async function queryHuggingFaceAPI(model, data) {
+    const response = await fetch(`${INFERENCE_API_URL}/${model}`, {
+        headers: { 
+            "Content-Type": "application/json" 
+        },
+        method: "POST",
+        body: JSON.stringify(data)
     });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
 }
 
-async function simulateImageAnalysis(imageFile) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve('Image Analysis Results:\n\n- Detected objects: Various elements\n- Confidence: Simulated analysis\n- Complexity: Medium');
-        }, 1000);
-    });
-}
-
-async function processImage(imageFile) {
-    return new Promise(async (resolve) => {
+// Convert image to base64
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = async function(e) {
-            const extractedText = await simulateTextExtraction(imageFile);
-            const imageDescription = await simulateImageAnalysis(imageFile);
-            
-            resolve({
-                originalImage: e.target.result,
-                extractedText: extractedText,
-                imageDescription: imageDescription
-            });
-        };
-        reader.readAsDataURL(imageFile);
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
     });
+}
+
+// Extract text from image
+async function extractTextFromImage(imageFile) {
+    try {
+        const base64Image = await getBase64(imageFile);
+        const result = await queryHuggingFaceAPI(OCR_MODEL, { 
+            image: base64Image 
+        });
+
+        return result.generated_text || 'No text could be extracted.';
+    } catch (error) {
+        console.error('Text extraction error:', error);
+        return 'Error extracting text.';
+    }
+}
+
+// Analyze image objects
+async function analyzeImageObjects(imageFile) {
+    try {
+        const base64Image = await getBase64(imageFile);
+        const results = await queryHuggingFaceAPI(OBJECT_DETECTION_MODEL, { 
+            image: base64Image 
+        });
+
+        // Process and format detection results
+        if (Array.isArray(results)) {
+            const formattedResults = results.map(item => 
+                `${item.label} (${(item.score * 100).toFixed(2)}% confidence)`
+            ).join('\n');
+
+            return formattedResults || 'No objects detected.';
+        }
+
+        return 'No objects detected.';
+    } catch (error) {
+        console.error('Image analysis error:', error);
+        return 'Error analyzing image.';
+    }
+}
+
+// Process image with both text extraction and object detection
+async function processImage(imageFile) {
+    // Show loading state
+    extractedTextPre.textContent = 'Extracting text...';
+    imageDescriptionPre.textContent = 'Analyzing image...';
+
+    try {
+        const reader = new FileReader();
+        return new Promise((resolve, reject) => {
+            reader.onload = async function(e) {
+                try {
+                    const [extractedText, imageDescription] = await Promise.all([
+                        extractTextFromImage(imageFile),
+                        analyzeImageObjects(imageFile)
+                    ]);
+
+                    resolve({
+                        originalImage: e.target.result,
+                        extractedText: extractedText,
+                        imageDescription: imageDescription
+                    });
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.readAsDataURL(imageFile);
+        });
+    } catch (error) {
+        console.error('Image processing error:', error);
+        extractedTextPre.textContent = 'Error processing image.';
+        imageDescriptionPre.textContent = 'Error processing image.';
+    }
 }
 
 function handleImageUpload(file) {
@@ -63,6 +135,9 @@ function handleImageUpload(file) {
 
         // Show processing section
         processingSection.classList.remove('hidden');
+    }).catch(error => {
+        console.error('Image upload error:', error);
+        alert('Failed to process image. Please try again.');
     });
 }
 
@@ -110,7 +185,7 @@ visualizeBtn.addEventListener('click', () => {
     if (uploadedImage) {
         visualizationContainer.innerHTML = `
             <div class="visualization-placeholder">
-                <h3>Visual Analysis</h3>
+                <h3>Visual Analysis Placeholder</h3>
                 <p>Advanced visualization features coming soon!</p>
             </div>
         `;
