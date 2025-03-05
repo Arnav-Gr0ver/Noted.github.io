@@ -1,44 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhiteboardAI: Transform Sketches to Insights</title>
-    <link href="css/styles.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Noted</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+  <style>
+    /* Global Styles */
+    body {
+      background-color: #fff;
+      color: #000;
+      font-family: 'Roboto Mono', monospace;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+    p.instructions {
+      max-width: 600px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    button, .upload-label {
+      background-color: #000;
+      color: #fff;
+      font-family: 'Roboto Mono', monospace;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    button:hover, .upload-label:hover {
+      background-color: #333;
+    }
+    #video, #canvas {
+      border: 2px solid #000;
+      border-radius: 4px;
+      margin: 10px;
+    }
+    #canvas {
+      display: none;
+    }
+    #notes {
+      width: 80%;
+      max-width: 600px;
+      height: 200px;
+      border: 2px solid #000;
+      margin-top: 20px;
+      padding: 10px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      background: #f9f9f9;
+    }
+    /* Hide file input but keep it accessible */
+    #upload {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <h1>WhiteboardAI</h1>
-            <div class="description">
-                <p>Transform unstructured whiteboard sketches into structured insights using advanced AI. Extract text, generate visualizations, and turn your raw ideas into clear, actionable notes.</p>
-            </div>
-        </header>
+  <h1>Noted</h1>
+  <p class="instructions">
+    Choose an option below to either capture a photo using your webcam or upload an image from your device. Then click "Process Photo" to generate structured notes.
+  </p>
+  
+  <!-- Webcam Video -->
+  <video id="video" width="320" height="240" autoplay></video>
+  
+  <!-- Canvas for previewing captured/uploaded image -->
+  <canvas id="canvas" width="320" height="240"></canvas>
+  
+  <!-- Buttons for capturing/uploading image -->
+  <div class="button-group">
+    <button id="snap">Take Photo</button>
+    <label for="upload" class="upload-label">Upload Image</label>
+    <input type="file" id="upload" accept="image/*">
+  </div>
+  
+  <!-- Process Button -->
+  <button id="process">Process Photo</button>
+  
+  <!-- Area to display the structured notes -->
+  <div id="notes">Structured notes will appear here...</div>
+  
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snap = document.getElementById('snap');
+    const processBtn = document.getElementById('process');
+    const uploadInput = document.getElementById('upload');
+    const notesDiv = document.getElementById('notes');
+    const ctx = canvas.getContext('2d');
 
-        <main>
-            <section id="upload-section">
-                <div id="dropzone">
-                    <input 
-                        type="file" 
-                        id="imageUpload" 
-                        accept="image/*"
-                    >
-                    <label for="imageUpload">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p>Upload Whiteboard Sketch for AI Transformation</p>
-                    </label>
-                </div>
-            </section>
-
-            <section id="processing-section" class="hidden">
-                <div id="notes-container" class="notes-container"></div>
-            </section>
-        </main>
-    </div>
-
-    <script src="js/app.js"></script>
+    // Setup webcam video stream
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+          video.play();
+        })
+        .catch(err => {
+          console.error("Error accessing webcam:", err);
+          notesDiv.textContent = "Unable to access the webcam.";
+        });
+    } else {
+      notesDiv.textContent = "getUserMedia is not supported in your browser.";
+    }
+    
+    // Capture image from webcam and draw it to the canvas
+    snap.addEventListener('click', () => {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.style.display = 'block';
+    });
+    
+    // Handle image upload; draw the uploaded image onto the canvas
+    uploadInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const img = new Image();
+          img.onload = function() {
+            // Clear any previous image and draw the new one
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.style.display = 'block';
+          }
+          img.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Process the image in the canvas by sending it to the Hugging Face model
+    processBtn.addEventListener('click', () => {
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('file', blob, 'photo.png');
+        
+        // Using the ungated BLIP image captioning model from Salesforce as our inference endpoint
+        fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Display the structured notes (or caption) returned by the model.
+          // You might further format this output as needed.
+          notesDiv.textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          notesDiv.textContent = 'An error occurred while processing the image.';
+        });
+      }, 'image/png');
+    });
+  </script>
 </body>
 </html>
