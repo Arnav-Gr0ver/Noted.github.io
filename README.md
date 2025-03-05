@@ -1,12 +1,12 @@
 # Noted. Sketch-to-Plot Tool
 
-The **Sketch-to-Plot Tool** is an online platform that interprets whiteboard drawings or sketches into comprehensible data visualizations and insights. By the use of Stable Diffusion and control models, the tool scans through the sketches and produces appropriate charts or graphs from them, from jumbled-up notes to organized visual information.
+**Noted.** interprets whiteboard drawings or sketches into comprehensible data visualizations and insights. By the use of Stable Diffusion and control models, the tool scans through the sketches and produces appropriate charts or graphs from them, from jumbled-up notes to organized visual information.
 
 ## Features
-- **Web Interface**: It is easy for the users to upload whiteboard sketches for processing.
-- **AI Integration**: Utilizes Stable Diffusion models and the API of Hugging Face to scan and extract meaningful data from the images.
-- **Data Visualizations**: Converts sketches into actionable graphical representations in the form of charts and graphs.
-- **Sketch-to-Chart Transformation**: Automatically creates graphs and other visualizations based on the content of the sketches.
+- **Web Interface**: easy for the users to upload whiteboard sketches for processing
+- **AI Integration**: Stable Diffusion models and the API of Hugging Face to scan and extract meaningful data from the images
+- **Data Visualizations**: sketches into actionable graphical representations in the form of charts and graphs
+- **Sketch-to-Chart Transformation**: creates graphs and other visualizations based on the content of the sketches
 
 ## How It Works
 1. Upload your whiteboard sketch to the web interface.
