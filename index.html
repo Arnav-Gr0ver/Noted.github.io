@@ -134,7 +134,6 @@
         reader.onload = function(event) {
           const img = new Image();
           img.onload = function() {
-            // Clear any previous image and draw the new one
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             canvas.style.display = 'block';
@@ -148,23 +147,28 @@
     // Process the image in the canvas by sending it to the Hugging Face model
     processBtn.addEventListener('click', () => {
       canvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('file', blob, 'photo.png');
-        
-        // Using the ungated BLIP image captioning model from Salesforce as our inference endpoint
+        // Send the image as raw binary data
         fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
           method: 'POST',
-          body: formData
+          headers: {
+            'Content-Type': 'application/octet-stream'
+          },
+          body: blob
         })
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) });
+          }
+          return response.json();
+        })
         .then(data => {
-          // Display the structured notes (or caption) returned by the model.
-          // You might further format this output as needed.
+          // Display the returned JSON structured notes.
+          // For example, the BLIP model might return an array of captions.
           notesDiv.textContent = JSON.stringify(data, null, 2);
         })
         .catch(error => {
           console.error('Error:', error);
-          notesDiv.textContent = 'An error occurred while processing the image.' + error;
+          notesDiv.textContent = 'An error occurred while processing the image: ' + error.message;
         });
       }, 'image/png');
     });
