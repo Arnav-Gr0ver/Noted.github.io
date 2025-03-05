@@ -11,18 +11,17 @@ class NoteTransformer {
         this.INFERENCE_API_URL = 'https://api-inference.huggingface.co/models';
     }
 
-    async queryHuggingFace(model, data) {
+    async queryHuggingFace(model, imageFile) {
         try {
+            const formData = new FormData();
+            formData.append('image', imageFile); // Send image as FormData
+
             const response = await fetch(`${this.INFERENCE_API_URL}/${model}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+                body: formData // FormData instead of JSON
             });
 
             if (!response.ok) {
-                // Try to get more detailed error information
                 const errorText = await response.text();
                 console.error('Detailed Error Response:', errorText);
                 throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
@@ -37,21 +36,17 @@ class NoteTransformer {
 
     async extractTextFromImage(imageFile) {
         try {
-            const base64Image = await this.getBase64(imageFile);
-            
             console.log('Attempting text extraction with model:', this.MODELS.textExtraction);
             
             const result = await this.queryHuggingFace(
                 this.MODELS.textExtraction, 
-                { image: base64Image }
+                imageFile // Directly pass the image file
             );
 
             console.log('Text Extraction Result:', result);
 
-            // Different models might return text differently
             return result.generated_text || 
                    result.text || 
-                   result.toString() || 
                    'No text could be extracted.';
         } catch (error) {
             console.error('Text extraction error:', error);
@@ -61,18 +56,15 @@ class NoteTransformer {
 
     async analyzeImageObjects(imageFile) {
         try {
-            const base64Image = await this.getBase64(imageFile);
-            
             console.log('Attempting object detection with model:', this.MODELS.objectDetection);
             
             const results = await this.queryHuggingFace(
                 this.MODELS.objectDetection, 
-                { image: base64Image }
+                imageFile
             );
 
             console.log('Object Detection Results:', results);
 
-            // Process detection results
             if (Array.isArray(results)) {
                 return results.map(item => 
                     `${item.label} (${(item.score * 100).toFixed(2)}% confidence)`
@@ -86,27 +78,8 @@ class NoteTransformer {
         }
     }
 
-    async getBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                // Ensure we strip the data URL prefix
-                const base64 = reader.result.split(',')[1];
-                
-                if (!base64) {
-                    reject(new Error('Failed to convert image to base64'));
-                }
-                
-                resolve(base64);
-            };
-            reader.onerror = error => reject(error);
-        });
-    }
-
     async processWhiteboardImage(imageFile) {
         try {
-            // Parallel processing of text and object detection
             const [extractedText, imageDescription] = await Promise.all([
                 this.extractTextFromImage(imageFile),
                 this.analyzeImageObjects(imageFile)
