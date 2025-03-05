@@ -18,6 +18,3 @@
 - **Stable Diffusion Models**: For interpreting and processing sketches.
 - **Hugging Face API**: For using strong AI models for data extraction and conversion.
 - **Web Interface**: For easy and simple sketch uploading.
-
-## License
-This project is licensed under the [MIT License](LICENSE).
