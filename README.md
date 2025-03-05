@@ -1,67 +1,23 @@
-# WhiteboardAI: Transforming Sketches into Insights
+# Noted. Sketch-to-Plot Tool
 
-## Vision
+The **Sketch-to-Plot Tool** is an online platform that interprets whiteboard drawings or sketches into comprehensible data visualizations and insights. By the use of Stable Diffusion and control models, the tool scans through the sketches and produces appropriate charts or graphs from them, from jumbled-up notes to organized visual information.
 
-WhiteboardAI is an advanced AI-powered platform that transforms unstructured whiteboard sketches into clear, actionable insights. By leveraging state-of-the-art Vision Transformers and Stable Diffusion models, we turn raw visual notes into structured, meaningful content.
+## Features
+- **Web Interface**: It is easy for the users to upload whiteboard sketches for processing.
+- **AI Integration**: Utilizes Stable Diffusion models and the API of Hugging Face to scan and extract meaningful data from the images.
+- **Data Visualizations**: Converts sketches into actionable graphical representations in the form of charts and graphs.
+- **Sketch-to-Chart Transformation**: Automatically creates graphs and other visualizations based on the content of the sketches.
 
-## Key Features
+## How It Works
+1. Upload your whiteboard sketch to the web interface.
+2. The system translates the sketch using AI models to understand the content.
+3. The pertinent data is extracted and used to generate charts and graphs.
+4. The resulting visualizations provide structured insights from your sketches.
 
-- 🖼️ Whiteboard Sketch Upload
-- 📝 Intelligent Text Extraction
-- 📊 Automated Data Visualization
-- 🤖 AI-Powered Transformation
-
-## Technology Stack
-
-- Vision Transformer (ViT) for Text Extraction
-- Stable Diffusion for Visualization
-- Hugging Face Inference API
-
-## Roadmap
-
-### Immediate Roadmap (3-6 Months)
-- [ ] Enhance text extraction accuracy
-- [ ] Improve visualization generation
-- [ ] Add support for multiple image formats
-- [ ] Implement advanced prompt engineering
-
-### Mid-Term Features (6-12 Months)
-- [ ] Multi-language support
-- [ ] Custom model fine-tuning
-- [ ] Advanced chart and graph generation
-- [ ] Collaborative note-sharing platform
-
-### Long-Term Vision (12-24 Months)
-- [ ] Real-time collaborative whiteboard transformation
-- [ ] Enterprise integration
-- [ ] Advanced machine learning model development
-- [ ] Cross-platform mobile application
-
-## Getting Started
-
-### Prerequisites
-- Modern web browser
-- Hugging Face API Key
-- Stable internet connection
-
-### Installation
-1. Clone the repository
-2. Add your Hugging Face API key
-3. Open `index.html`
-4. Start transforming whiteboards!
-
-## Ethical AI Commitment
-
-We are committed to responsible AI development, ensuring our technology enhances human creativity while maintaining privacy and ethical standards.
-
-## Contributing
-
-Contributions are welcome! Please read our contribution guidelines for details.
+## Technologies Used
+- **Stable Diffusion Models**: For interpreting and processing sketches.
+- **Hugging Face API**: For using strong AI models for data extraction and conversion.
+- **Web Interface**: For easy and simple sketch uploading.
 
 ## License
-
-MIT License
-
----
-
-**Powered by AI, Designed for Humans**
+This project is licensed under the [MIT License](LICENSE).

@@ -1,205 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Noted - Drawing to Graphics</title>
-  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
-  <style>
-    /* Global Styles */
-    body {
-      background-color: #fff;
-      color: #000;
-      font-family: 'Roboto Mono', monospace;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h1 {
-      font-size: 2.8em;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    p.instructions {
-      max-width: 600px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .button-group {
-      display: flex;
-      gap: 10px;
-      margin: 10px 0;
-    }
-    button, .upload-label {
-      background-color: #000;
-      color: #fff;
-      font-family: 'Roboto Mono', monospace;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1em;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.3s;
-      text-decoration: none;
-      display: inline-block;
-    }
-    button:hover, .upload-label:hover {
-      background-color: #333;
-    }
-    #video, #canvas, #outputImage {
-      border: 2px solid #000;
-      border-radius: 4px;
-      margin: 10px;
-      max-width: 320px;
-      max-height: 240px;
-    }
-    #canvas {
-      display: none;
-    }
-    #outputImage {
-      display: none;
-    }
-    #notes {
-      width: 80%;
-      max-width: 600px;
-      margin-top: 20px;
-      padding: 10px;
-      background: #f9f9f9;
-      border: 2px solid #000;
-      white-space: pre-wrap;
-      overflow-y: auto;
-      text-align: center;
-    }
-    /* Hide file input but keep it accessible */
-    #upload {
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Noted. - Intelligent Sketch Processing</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Noted</h1>
-  <p class="instructions">
-    Capture or upload your drawing, then click “Transform Drawing” to generate charts, plots, tables, or graphics via Stable Diffusion.
-  </p>
-  
-  <!-- Webcam Video -->
-  <video id="video" width="320" height="240" autoplay></video>
-  
-  <!-- Canvas for previewing captured/uploaded drawing -->
-  <canvas id="canvas" width="320" height="240"></canvas>
-  
-  <!-- Output image element for the generated graphic -->
-  <img id="outputImage" alt="Generated Graphic" width="320" height="240">
-  
-  <!-- Buttons for capturing/uploading drawing -->
-  <div class="button-group">
-    <button id="snap">Take Photo</button>
-    <label for="upload" class="upload-label">Upload Drawing</label>
-    <input type="file" id="upload" accept="image/*">
-  </div>
-  
-  <!-- Transform Button -->
-  <button id="transform">Transform Drawing</button>
-  
-  <!-- Output area for text status or errors -->
-  <div id="notes">Generated graphic will appear here...</div>
-  
-  <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const snap = document.getElementById('snap');
-    const transformBtn = document.getElementById('transform');
-    const uploadInput = document.getElementById('upload');
-    const notesDiv = document.getElementById('notes');
-    const outputImage = document.getElementById('outputImage');
-    const ctx = canvas.getContext('2d');
+    <div class="container">
+        <div class="section">
+            <div class="header">
+                <h1>Noted.</h1>
+                <p>Transform Creative Ideas into Precise Visual Insights</p>
+            </div>
 
-    // Setup webcam video stream
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          video.srcObject = stream;
-          video.play();
-        })
-        .catch(err => {
-          console.error("Error accessing webcam:", err);
-          notesDiv.textContent = "Unable to access the webcam.";
-        });
-    } else {
-      notesDiv.textContent = "getUserMedia is not supported in your browser.";
-    }
-    
-    // Capture drawing from webcam and draw it to the canvas
-    snap.addEventListener('click', () => {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.style.display = 'block';
-      outputImage.style.display = 'none';
-    });
-    
-    // Handle drawing upload; draw the uploaded image onto the canvas
-    uploadInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          const img = new Image();
-          img.onload = function() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            canvas.style.display = 'block';
-            outputImage.style.display = 'none';
-          }
-          img.src = event.target.result;
-        }
-        reader.readAsDataURL(file);
-      }
-    });
-    
-    // Transform the drawing using Stable Diffusion img2img
-    transformBtn.addEventListener('click', () => {
-      // Convert the canvas drawing to a data URL (base64 encoded PNG)
-      const dataUrl = canvas.toDataURL('image/png');
-      
-      // Prepare the payload for the img2img API call.
-      // Some endpoints may expect the full data URL while others only need the base64 string.
-      const payload = {
-        prompt: "Transform this drawing into a clear, structured chart, plot, table, or graphic",
-        init_image: dataUrl,
-        strength: 0.7,
-        num_inference_steps: 50
-      };
-      
-      notesDiv.textContent = "Processing drawing...";
-      
-      // Change the model endpoint as needed. Here we use a Stable Diffusion endpoint.
-      fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          // If required, add: 'Authorization': 'Bearer YOUR_TOKEN'
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(response => {
-        if (!response.ok) {
-          return response.text().then(text => { throw new Error(text) });
-        }
-        // The endpoint returns an image (binary blob)
-        return response.blob();
-      })
-      .then(blob => {
-        // Create an object URL for the generated image and display it
-        const imageUrl = URL.createObjectURL(blob);
-        outputImage.src = imageUrl;
-        outputImage.style.display = 'block';
-        notesDiv.textContent = "Transformation complete.";
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        notesDiv.textContent = 'An error occurred: ' + error.message;
-      });
-    });
-  </script>
+            <div class="drawing-tools">
+                <button class="tool-btn active" data-tool="pencil">Pencil</button>
+                <button class="tool-btn" data-tool="eraser">Eraser</button>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="sketchCanvas" width="800" height="800"></canvas>
+            </div>
+
+            <div class="tool-controls">
+                <button id="clearBtn" class="btn btn-secondary">Clear Canvas</button>
+                <button id="generateBtn" class="btn">Generate Visualization</button>
+            </div>
+
+            <div class="upload-section">
+                <input type="file" id="fileUpload" accept="image/*">
+                <label for="fileUpload" class="file-upload-btn">
+                    Or Upload an Image
+                </label>
+            </div>
+
+            <div class="visualization-type">
+                <select id="visualizationType">
+                    <option value="line_graph">Line Graph</option>
+                    <option value="bar_chart">Bar Chart</option>
+                    <option value="scatter_plot">Scatter Plot</option>
+                    <option value="pie_chart">Pie Chart</option>
+                    <option value="heatmap">Heatmap</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section result-section">
+            <div id="status"></div>
+            <img id="resultImage" style="display:none;">
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
