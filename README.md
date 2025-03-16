@@ -29,3 +29,5 @@ We'll use:
 * [ ] Evaluation
 * [ ] DVC Setup
 * [ ] Experiment logging with MLflow
+
+[ReScience](https://rescience.github.io/)
